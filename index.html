@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Бренд-навигатор Билайна</title>
+  <meta name="description" content="Интерактивное дерево решений по архитектуре бренд-сущностей Билайна" />
+  <style>
+    :root {
+      --bee-yellow: #ffd400;
+      --bee-black: #111111;
+      --bee-white: #ffffff;
+      --bee-gray: #f3f3f3;
+      --bee-gray-2: #dedede;
+      --bee-dark-gray: #5f5f5f;
+      --green: #1f8f4d;
+      --red: #b00020;
+      --radius-xl: 28px;
+      --radius-lg: 20px;
+      --radius-md: 14px;
+      --shadow: 0 20px 70px rgba(0,0,0,0.10);
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      font-family: Inter, Arial, Helvetica, sans-serif;
+      background: var(--bee-gray);
+      color: var(--bee-black);
+    }
+
+    button, input { font-family: inherit; }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 300px 1fr;
+    }
+
+    .app.locked { display: none; }
+
+    .sidebar {
+      background: var(--bee-black);
+      color: var(--bee-white);
+      padding: 28px 22px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 26px;
+    }
+
+    .bee-mark {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      background:
+        linear-gradient(145deg, transparent 0 18%, #111 18% 30%, transparent 30% 43%, #111 43% 56%, transparent 56% 100%),
+        var(--bee-yellow);
+      box-shadow: inset -6px -8px 0 rgba(0,0,0,0.15);
+      flex-shrink: 0;
+    }
+
+    .brand-title {
+      font-size: 20px;
+      font-weight: 950;
+      line-height: 1;
+      letter-spacing: -0.03em;
+    }
+
+    .brand-subtitle {
+      color: #aaa;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    .logout-btn {
+      width: 100%;
+      border: 1px solid rgba(255,255,255,0.16);
+      background: rgba(255,255,255,0.06);
+      color: #fff;
+      border-radius: 999px;
+      padding: 11px 14px;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      margin: 0 0 28px;
+    }
+
+    .logout-btn:hover { background: rgba(255,255,255,0.12); }
+
+    .nav-label {
+      color: #aaa;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 12px;
+      font-weight: 850;
+    }
+
+    .step-list {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .step-item {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      padding: 11px 12px;
+      border-radius: 14px;
+      color: #aaa;
+      background: rgba(255,255,255,0.04);
+      font-size: 13px;
+      transition: 0.2s;
+    }
+
+    .step-item.active {
+      background: var(--bee-yellow);
+      color: var(--bee-black);
+      font-weight: 900;
+    }
+
+    .step-item.done {
+      color: #fff;
+      background: rgba(255,255,255,0.1);
+    }
+
+    .step-number {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.12);
+      display: grid;
+      place-items: center;
+      font-size: 11px;
+      font-weight: 900;
+      flex-shrink: 0;
+    }
+
+    .step-item.active .step-number {
+      background: var(--bee-black);
+      color: var(--bee-yellow);
+    }
+
+    .main {
+      padding: 34px;
+      max-width: 1440px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .hero {
+      background: var(--bee-black);
+      color: var(--bee-white);
+      border-radius: var(--radius-xl);
+      padding: 42px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 28px;
+    }
+
+    .hero:after {
+      content: "";
+      position: absolute;
+      width: 320px;
+      height: 320px;
+      border-radius: 50%;
+      right: -80px;
+      top: -90px;
+      background:
+        linear-gradient(145deg, transparent 0 18%, #111 18% 30%, transparent 30% 43%, #111 43% 56%, transparent 56% 100%),
+        var(--bee-yellow);
+      opacity: 0.95;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      max-width: 870px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: var(--bee-yellow);
+      color: var(--bee-black);
+      font-size: 13px;
+      font-weight: 900;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      font-size: clamp(42px, 6vw, 78px);
+      line-height: 0.92;
+      letter-spacing: -0.06em;
+      margin: 0 0 20px;
+      max-width: 900px;
+    }
+
+    .hero p {
+      font-size: 20px;
+      line-height: 1.42;
+      color: #ddd;
+      max-width: 760px;
+      margin: 0;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 380px;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--bee-white);
+      border-radius: var(--radius-xl);
+      padding: 28px;
+      box-shadow: var(--shadow);
+    }
+
+    .panel.dark {
+      background: var(--bee-black);
+      color: var(--bee-white);
+    }
+
+    .panel.yellow { background: var(--bee-yellow); }
+
+    .section-title {
+      font-size: 38px;
+      letter-spacing: -0.05em;
+      line-height: 0.98;
+      margin: 0 0 12px;
+    }
+
+    .section-desc {
+      color: var(--bee-dark-gray);
+      font-size: 16px;
+      line-height: 1.45;
+      margin: 0 0 24px;
+      max-width: 760px;
+    }
+
+    .question {
+      font-size: 30px;
+      line-height: 1.05;
+      letter-spacing: -0.04em;
+      margin: 0 0 20px;
+    }
+
+    .hint {
+      background: #f6f6f6;
+      border: 1px solid #e5e5e5;
+      padding: 16px;
+      border-radius: 18px;
+      color: #444;
+      font-size: 14px;
+      line-height: 1.45;
+      margin-bottom: 20px;
+    }
+
+    .options-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .option-card {
+      text-align: left;
+      border: 2px solid #e9e9e9;
+      background: #fff;
+      border-radius: 20px;
+      padding: 18px;
+      min-height: 118px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .option-card:hover {
+      border-color: var(--bee-black);
+      transform: translateY(-2px);
+    }
+
+    .option-card.selected {
+      border-color: var(--bee-yellow);
+      background: #fff7bf;
+      box-shadow: 0 0 0 3px rgba(255,212,0,0.35);
+    }
+
+    .option-title {
+      font-weight: 950;
+      font-size: 18px;
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
+    }
+
+    .option-desc {
+      color: #666;
+      font-size: 14px;
+      line-height: 1.35;
+    }
+
+    .check-list { display: grid; gap: 10px; }
+
+    .check-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 14px 15px;
+      border-radius: 16px;
+      border: 1px solid #e6e6e6;
+      background: #fff;
+      cursor: pointer;
+      transition: 0.18s;
+    }
+
+    .check-item:hover { border-color: var(--bee-black); }
+
+    .check-item input {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--bee-yellow);
+      margin-top: 1px;
+      flex-shrink: 0;
+    }
+
+    .check-text { font-size: 15px; line-height: 1.3; }
+
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 26px;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 999px;
+      padding: 14px 22px;
+      font-size: 15px;
+      font-weight: 950;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .btn.primary { background: var(--bee-black); color: var(--bee-white); }
+    .btn.primary:hover { background: #333; transform: translateY(-1px); }
+    .btn.yellow { background: var(--bee-yellow); color: var(--bee-black); }
+    .btn.secondary { background: #eeeeee; color: var(--bee-black); }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+    .aside {
+      position: sticky;
+      top: 28px;
+      display: grid;
+      gap: 18px;
+    }
+
+    .mini-title {
+      font-size: 13px;
+      color: #777;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 900;
+      margin-bottom: 12px;
+    }
+
+    .rec-level {
+      font-size: 54px;
+      line-height: 0.9;
+      letter-spacing: -0.07em;
+      font-weight: 950;
+      margin-bottom: 8px;
+    }
+
+    .rec-name {
+      font-size: 18px;
+      font-weight: 950;
+      line-height: 1.15;
+      margin-bottom: 14px;
+    }
+
+    .rec-desc {
+      font-size: 14px;
+      color: #555;
+      line-height: 1.45;
+    }
+
+    .signal-list { display: grid; gap: 8px; margin-top: 16px; }
+
+    .signal {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: #f6f6f6;
+      font-size: 13px;
+    }
+
+    .signal strong { font-weight: 950; }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 22px;
+      margin-top: 24px;
+    }
+
+    .result-card {
+      border-radius: var(--radius-xl);
+      padding: 28px;
+      background: var(--bee-yellow);
+    }
+
+    .result-card.black { background: var(--bee-black); color: var(--bee-white); }
+    .result-card.white { background: #fff; border: 1px solid #e7e7e7; }
+
+    .result-kicker {
+      font-size: 13px;
+      font-weight: 950;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 16px;
+    }
+
+    .result-title {
+      font-size: 42px;
+      line-height: 0.95;
+      letter-spacing: -0.06em;
+      margin: 0 0 16px;
+      font-weight: 950;
+    }
+
+    .result-text { font-size: 16px; line-height: 1.45; margin: 0; }
+
+    .two-cols {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 18px;
+    }
+
+    .list-card {
+      background: #fff;
+      border-radius: 20px;
+      padding: 20px;
+      border: 1px solid #e7e7e7;
+    }
+
+    .list-card h3 {
+      margin: 0 0 12px;
+      font-size: 18px;
+      letter-spacing: -0.03em;
+    }
+
+    ul { margin: 0; padding-left: 18px; }
+    li { margin-bottom: 8px; line-height: 1.35; }
+
+    .table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      overflow: hidden;
+      border-radius: 20px;
+      margin-top: 18px;
+      border: 1px solid #e2e2e2;
+      background: #fff;
+    }
+
+    .table th, .table td {
+      text-align: left;
+      padding: 14px 16px;
+      border-bottom: 1px solid #eee;
+      font-size: 14px;
+      vertical-align: top;
+    }
+
+    .table th {
+      background: var(--bee-black);
+      color: #fff;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .table tr:last-child td { border-bottom: none; }
+
+    .copy-box {
+      white-space: pre-wrap;
+      background: #f7f7f7;
+      border: 1px dashed #cfcfcf;
+      padding: 18px;
+      border-radius: 18px;
+      font-size: 14px;
+      line-height: 1.45;
+      margin-top: 16px;
+    }
+
+    .hidden { display: none !important; }
+
+    .auth-screen {
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 80% 10%, rgba(255,212,0,0.9) 0 18%, transparent 19%),
+        var(--bee-black);
+      display: grid;
+      place-items: center;
+      padding: 28px;
+    }
+
+    .auth-card {
+      width: min(520px, 100%);
+      background: var(--bee-white);
+      border-radius: var(--radius-xl);
+      padding: 36px;
+      box-shadow: var(--shadow);
+    }
+
+    .auth-logo {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+
+    .auth-title {
+      font-size: 42px;
+      line-height: 0.95;
+      letter-spacing: -0.06em;
+      margin: 0 0 14px;
+      font-weight: 950;
+    }
+
+    .auth-desc {
+      color: #555;
+      font-size: 16px;
+      line-height: 1.45;
+      margin: 0 0 24px;
+    }
+
+    .auth-input {
+      width: 100%;
+      border: 2px solid #e2e2e2;
+      border-radius: 18px;
+      padding: 16px 18px;
+      font-size: 17px;
+      outline: none;
+      margin-bottom: 12px;
+    }
+
+    .auth-input:focus {
+      border-color: var(--bee-yellow);
+      box-shadow: 0 0 0 4px rgba(255, 212, 0, 0.28);
+    }
+
+    .auth-error {
+      display: none;
+      background: #fff1f1;
+      color: var(--red);
+      border: 1px solid #ffd0d0;
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-size: 14px;
+      margin: 10px 0 16px;
+    }
+
+    .auth-error.visible { display: block; }
+
+    @media (max-width: 1100px) {
+      .app { grid-template-columns: 1fr; }
+      .sidebar { position: relative; height: auto; }
+      .layout, .result-grid, .two-cols { grid-template-columns: 1fr; }
+      .aside { position: relative; top: 0; }
+      .options-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <section class="auth-screen" id="authScreen">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <div class="bee-mark"></div>
+        <div>
+          <div class="brand-title" style="color: var(--bee-black);">Бренд-навигатор</div>
+          <div class="brand-subtitle">вход во внутренний инструмент</div>
+        </div>
+      </div>
+      <h1 class="auth-title">Доступ к дереву решений</h1>
+      <p class="auth-desc">Введите пароль, чтобы открыть инструмент по архитектуре бренд-сущностей Билайна.</p>
+      <input class="auth-input" type="password" id="accessPassword" placeholder="Введите пароль" autocomplete="current-password" />
+      <div class="auth-error" id="authError">Неверный пароль. Проверьте ввод и попробуйте ещё раз.</div>
+      <button class="btn primary" style="width: 100%;" id="loginBtn">Войти</button>
+      <p style="margin: 16px 0 0; color: #777; font-size: 12px; line-height: 1.35;">
+        Для прототипа пароль хранится на стороне клиента. Для настоящей защиты используйте серверную авторизацию.
+      </p>
+    </div>
+  </section>
+
+  <div class="app locked" id="appRoot">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="bee-mark"></div>
+        <div>
+          <div class="brand-title">Бренд-навигатор</div>
+          <div class="brand-subtitle">дерево решений</div>
+        </div>
+      </div>
+      <button class="logout-btn" onclick="logout()">Выйти</button>
+      <div class="nav-label">Этапы проверки</div>
+      <div class="step-list" id="stepList"></div>
+    </aside>
+
+    <main class="main">
+      <section class="hero">
+        <div class="hero-content">
+          <div class="badge">внутренний инструмент Билайна</div>
+          <h1>Нужен ли сущности отдельный бренд?</h1>
+          <p>Пройдите дерево решений: определите тип сущности, уровень брендирования, модель связи с Билайном и допустимые инструменты вместо лишнего логотипа.</p>
+        </div>
+      </section>
+
+      <section class="layout" id="quizLayout">
+        <div class="panel">
+          <h2 class="question" id="questionTitle"></h2>
+          <div class="hint" id="questionHint"></div>
+          <div id="questionBody"></div>
+          <div class="controls">
+            <button class="btn secondary" id="backBtn">Назад</button>
+            <button class="btn primary" id="nextBtn">Далее</button>
+          </div>
+        </div>
+
+        <aside class="aside">
+          <div class="panel yellow">
+            <div class="mini-title">предварительная рекомендация</div>
+            <div class="rec-level" id="sideLevel">—</div>
+            <div class="rec-name" id="sideName">Начните проверку</div>
+            <div class="rec-desc" id="sideDesc">Ответы постепенно уточнят уровень брендирования и модель связи.</div>
+          </div>
+          <div class="panel">
+            <div class="mini-title">сигналы</div>
+            <div class="signal-list" id="signals"></div>
+          </div>
+        </aside>
+      </section>
+
+      <section id="resultSection" class="hidden"></section>
+    </main>
+  </div>
+
+  <script>
+    const ACCESS_PASSWORD = "beeline-brand";
+    const AUTH_KEY = "beelineBrandNavigatorAuth";
+
+    const steps = [
+      { id: "product", title: "Продуктовый фильтр" },
+      { id: "group", title: "Группа сущности" },
+      { id: "subtype", title: "Подтип" },
+      { id: "role", title: "Самостоятельная роль" },
+      { id: "value", title: "Обещание и аудитория" },
+      { id: "lifecycle", title: "Жизненный цикл" },
+      { id: "touchpoints", title: "Носители" },
+      { id: "resources", title: "Владелец и ресурсы" },
+      { id: "recognition", title: "Узнаваемость" },
+      { id: "beelineRole", title: "Роль Билайна" },
+      { id: "stoppers", title: "Стоп-факторы" },
+      { id: "result", title: "Результат" }
+    ];
+
+    const groups = [
+      { id: "org", title: "Организационная структура", desc: "Функция, департамент, регион, бизнес-направление или административный блок." },
+      { id: "internal", title: "Внутренняя система / объединение", desc: "Программа, платформа, внутренний зонтик, комьюнити, клуб или амбассадорская сеть." },
+      { id: "project", title: "Проектная / событийная активность", desc: "Проект, кампания, инициатива, мероприятие, серия событий или спецпроект." },
+      { id: "partner", title: "Партнёрский формат", desc: "Совместный проект, интеграция, поддержка, технологическое участие или участие Билайна." },
+      { id: "standalone", title: "Самостоятельная / стратегическая сущность", desc: "Внешний саббренд, ДЗО, фонд, отдельная компания или юридически самостоятельная структура." }
+    ];
+
+    const subtypes = {
+      org: ["Функция / департамент", "Регион", "Бизнес-направление", "Административный блок"],
+      internal: ["Программа", "Платформа", "Внутренний зонтик", "Комьюнити / клуб", "Амбассадорская сеть"],
+      project: ["Проект", "Кампания", "Инициатива / пилот", "Мероприятие", "Серия мероприятий", "Спецпроект"],
+      partner: ["Совместный проект", "Проект при поддержке", "Технологическое партнёрство", "Интеграция", "Участие Билайна"],
+      standalone: ["Внешний саббренд", "ДЗО", "Отдельная компания", "Фонд", "Самостоятельная платформа"]
+    };
+
+    const checkGroups = {
+      role: [
+        "Сущность существует не ради одного макета, лендинга или стенда",
+        "У неё есть понятная роль внутри компании / экосистемы",
+        "Она не дублирует уже существующую сущность",
+        "Есть причина выделять её отдельно",
+        "Она не является просто разовой коммуникацией"
+      ],
+      value: [
+        "Понятно, что сущность даёт аудитории",
+        "Есть самостоятельное обещание / польза",
+        "Есть устойчивая аудитория",
+        "Аудитория не случайная и не разовая",
+        "Есть повторяемый сценарий взаимодействия"
+      ],
+      touchpoints: [
+        "Презентации", "Лендинги / страницы", "Посты / рассылки", "Мероприятия", "Видео", "Мерч", "Офлайн-носители", "Документы", "Внутренний портал", "Партнёрские материалы"
+      ],
+      resources: [
+        "Есть бизнес-владелец", "Есть бренд / коммуникационный владелец", "Есть бюджет или ресурс на поддержку", "Есть команда, которая будет обновлять материалы", "Есть процесс согласования", "Можно вести паспорт / реестр сущности"
+      ],
+      stoppers: [
+        "Это один носитель: презентация, лендинг, афиша или стенд",
+        "Это разовое мероприятие без продолжения",
+        "Это временный проект без долгосрочной роли",
+        "Нет владельца",
+        "Нет бюджета / ресурса на поддержку",
+        "Нет регулярных носителей",
+        "Нет самостоятельного ценностного предложения",
+        "Нет устойчивой аудитории",
+        "Название ещё не утверждено",
+        "Сущность дублирует уже существующую",
+        "Связь с Билайном становится непонятной",
+        "Задачу можно решить шаблоном, плашкой, key visual или co-branding"
+      ]
+    };
+
+    const lifecycleOptions = [
+      { id: "one", title: "Разовая активность", value: 0 },
+      { id: "3m", title: "До 3 месяцев", value: 1 },
+      { id: "6m", title: "3–6 месяцев", value: 2 },
+      { id: "12m", title: "6–12 месяцев", value: 3 },
+      { id: "year", title: "Больше года", value: 4 },
+      { id: "system", title: "Постоянная система", value: 5 }
+    ];
+
+    const recognitionOptions = [
+      { id: "none", title: "Нет, нужна только навигация", value: 0 },
+      { id: "low", title: "Нужна узнаваемость серии материалов", value: 1 },
+      { id: "medium", title: "Нужна узнаваемость программы / платформы", value: 2 },
+      { id: "high", title: "Нужно копить отдельный бренд-капитал", value: 3 },
+      { id: "legal", title: "Есть юридическая / бизнес-самостоятельность", value: 4 }
+    ];
+
+    const beelineRoles = [
+      { id: "owner", title: "Владелец", model: "Билайн представляет / by beeline" },
+      { id: "initiator", title: "Инициатор", model: "Билайн + название / by beeline" },
+      { id: "partner", title: "Равноправный партнёр", model: "совместно с Билайн" },
+      { id: "support", title: "Поддерживающая сторона", model: "при поддержке Билайн" },
+      { id: "tech", title: "Технологический партнёр", model: "powered by beeline" },
+      { id: "participant", title: "Участник", model: "при участии Билайн" }
+    ];
+
+    const state = {
+      step: 0,
+      product: null,
+      group: null,
+      subtype: null,
+      lifecycle: null,
+      recognition: null,
+      beelineRole: null,
+      checks: { role: [], value: [], touchpoints: [], resources: [], stoppers: [] }
+    };
+
+    const stepList = document.getElementById("stepList");
+    const questionTitle = document.getElementById("questionTitle");
+    const questionHint = document.getElementById("questionHint");
+    const questionBody = document.getElementById("questionBody");
+    const backBtn = document.getElementById("backBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const sideLevel = document.getElementById("sideLevel");
+    const sideName = document.getElementById("sideName");
+    const sideDesc = document.getElementById("sideDesc");
+    const signals = document.getElementById("signals");
+    const quizLayout = document.getElementById("quizLayout");
+    const resultSection = document.getElementById("resultSection");
+
+    function renderSteps() {
+      stepList.innerHTML = steps.map((s, i) => {
+        const cls = i === state.step ? "active" : i < state.step ? "done" : "";
+        return `<div class="step-item ${cls}"><div class="step-number">${i + 1}</div><div>${s.title}</div></div>`;
+      }).join("");
+    }
+
+    function getChecksCount(key) { return state.checks[key]?.length || 0; }
+
+    function hasCriticalStopper() {
+      const critical = [
+        "Это один носитель: презентация, лендинг, афиша или стенд",
+        "Это разовое мероприятие без продолжения",
+        "Нет владельца",
+        "Нет самостоятельного ценностного предложения",
+        "Нет устойчивой аудитории",
+        "Связь с Билайном становится непонятной",
+        "Задачу можно решить шаблоном, плашкой, key visual или co-branding"
+      ];
+      return state.checks.stoppers.some(item => critical.includes(item));
+    }
+
+    function calculateResult() {
+      if (state.product === "yes") {
+        return {
+          level: "отдельный трек",
+          levelNum: "PT",
+          name: "Продуктовая архитектура",
+          logo: "Определяется в отдельной продуктовой методологии",
+          model: "Отдельный трек",
+          desc: "Продукты, тарифы, сервисы, приложения и цифровые платформы не классифицируются в этом дереве.",
+          can: ["Передать в трек продуктовой архитектуры", "Описать продуктовый сценарий", "Определить правила UI / иконок / продуктовых дескрипторов"],
+          cannot: ["Классифицировать как внутренний саббренд", "Выдавать продуктовый логотип через это дерево"],
+          next: ["Передать запрос владельцам продуктовой архитектуры", "Собрать отдельный бриф по продукту"]
+        };
+      }
+
+      const roleScore = getChecksCount("role");
+      const valueScore = getChecksCount("value");
+      const touchScore = getChecksCount("touchpoints");
+      const resScore = getChecksCount("resources");
+      const lifecycleValue = lifecycleOptions.find(o => o.id === state.lifecycle)?.value ?? 0;
+      const recognitionValue = recognitionOptions.find(o => o.id === state.recognition)?.value ?? 0;
+      const stoppers = getChecksCount("stoppers");
+      let level = 0;
+
+      if (state.group === "standalone") level = 4;
+      else if (state.group === "partner") level = 1;
+      else if (state.group === "org") level = 0;
+      else if (state.group === "project") level = 1;
+      else if (state.group === "internal") level = 1;
+
+      if (roleScore >= 3 && valueScore >= 3 && lifecycleValue >= 3 && touchScore >= 4 && resScore >= 3) level = Math.max(level, 2);
+      if (roleScore >= 4 && valueScore >= 4 && lifecycleValue >= 4 && touchScore >= 5 && resScore >= 4 && recognitionValue >= 3) level = Math.max(level, 3);
+      if (state.group === "standalone" && recognitionValue >= 3) level = 4;
+      if (state.group === "org" && state.subtype !== "Бизнес-направление") level = Math.min(level, 1);
+      if (state.group === "project" && lifecycleValue < 4) level = Math.min(level, 1);
+      if (state.group === "partner") level = Math.min(Math.max(level, 1), 2);
+      if (hasCriticalStopper() || stoppers >= 3 || resScore <= 1) level = Math.min(level, 1);
+
+      const levelData = {
+        0: { levelNum: "0", name: "Мастер-бренд / стандартное оформление", logo: "Отдельный логотип не создаётся", desc: "Сущности достаточно стандартного оформления в системе Билайна.", can: ["Логотип Билайна", "Стандартный шаблон", "Название текстом", "Плашка / дескриптор"], cannot: ["Отдельный логотип", "Своя палитра", "Самостоятельная айдентика"], next: ["Использовать готовый шаблон", "Проверить корректность названия", "Не создавать отдельный знак"] },
+        1: { levelNum: "1", name: "Брендированный модуль", logo: "Отдельный логотип не создаётся", desc: "Можно выделить сущность визуально, но без создания самостоятельного бренда.", can: ["Название", "Key visual", "Плашка", "Дескриптор", "Иконка из библиотеки", "Шаблоны"], cannot: ["Новый логотип", "Полностью своя визуальная система", "Отрыв от мастер-бренда"], next: ["Собрать brief на key visual", "Выбрать шаблон", "Согласовать применение с бренд-командой"] },
+        2: { levelNum: "2", name: "Программа / платформа / внутренний зонтик", logo: "Возможен логоблок или типографический знак по правилам", desc: "Сущность достаточно устойчивая, чтобы иметь визуальную систему внутри бренда.", can: ["Типографическое название", "Визуальная система", "Набор шаблонов", "Архитектура рубрик", "Ограниченная доп. палитра"], cannot: ["Выглядеть как отдельная компания", "Плодить подбренды без правил", "Скрывать связь с Билайном"], next: ["Заполнить карточку сущности", "Определить владельца", "Собрать паспорт программы / зонтика", "Передать на бренд-согласование"] },
+        3: { levelNum: "3", name: "Саббренд под мастер-брендом", logo: "Логоблок возможен после проверки и согласования", desc: "Сущность может накапливать отдельную узнаваемость, но связь с Билайном обязательна.", can: ["Логоблок", "Endorsement", "Паспорт бренда", "Правила носителей", "Реестр", "Модель связи с Билайном"], cannot: ["Самостоятельный бренд без связи с Билайном", "Запуск без владельца", "Запуск без стратегии"], next: ["Подготовить бизнес-обоснование", "Собрать паспорт бренда", "Вынести на Центр стандартов бренда", "Добавить в реестр"] },
+        4: { levelNum: "4", name: "Endorsed / самостоятельная сущность", logo: "Да / индивидуально, только после стратегического решения", desc: "Это самостоятельная или юридически отдельная сущность. Решение не только дизайн-задача.", can: ["Отдельная архитектурная модель", "Endorsed-модель", "Самостоятельная айдентика", "Юридическое согласование", "Стратегическое согласование"], cannot: ["Решать только на уровне дизайна", "Запускать без юридической проверки", "Скрывать роль Билайна без решения"], next: ["Подключить бизнес", "Подключить юристов", "Подключить PR / маркетинг", "Подготовить стратегическое решение"] }
+      };
+
+      const selectedRole = beelineRoles.find(r => r.id === state.beelineRole);
+      return {
+        level,
+        ...levelData[level],
+        model: selectedRole ? selectedRole.model : "Модель связи уточняется",
+        category: groups.find(g => g.id === state.group)?.title || "Не выбрано",
+        subtype: state.subtype || "Не выбрано"
+      };
+    }
+
+    function renderSignals() {
+      signals.innerHTML = `
+        <div class="signal"><span>Роль</span><strong>${getChecksCount("role")}/5</strong></div>
+        <div class="signal"><span>Обещание / аудитория</span><strong>${getChecksCount("value")}/5</strong></div>
+        <div class="signal"><span>Носители</span><strong>${getChecksCount("touchpoints")}/10</strong></div>
+        <div class="signal"><span>Ресурсы</span><strong>${getChecksCount("resources")}/6</strong></div>
+        <div class="signal"><span>Стоп-факторы</span><strong>${getChecksCount("stoppers")}</strong></div>
+      `;
+    }
+
+    function updateAside() {
+      const res = calculateResult();
+      sideLevel.textContent = res.levelNum || "—";
+      sideName.textContent = res.name || "Начните проверку";
+      sideDesc.textContent = res.desc || "Ответы постепенно уточнят рекомендацию.";
+      renderSignals();
+    }
+
+    function setSingle(key, value) {
+      state[key] = value;
+      if (key === "group") state.subtype = null;
+      render();
+    }
+
+    function toggleCheck(key, item) {
+      const arr = state.checks[key];
+      const index = arr.indexOf(item);
+      if (index >= 0) arr.splice(index, 1);
+      else arr.push(item);
+      render();
+    }
+
+    function optionCards(options, selectedKey, stateKey) {
+      return `<div class="options-grid">${options.map(o => `
+        <button class="option-card ${state[selectedKey] === o.id ? "selected" : ""}" onclick="setSingle('${stateKey}', '${o.id}')">
+          <div class="option-title">${o.title}</div>
+          <div class="option-desc">${o.desc || ""}</div>
+        </button>`).join("")}</div>`;
+    }
+
+    function optionCardsRaw(options, stateKey) {
+      return `<div class="options-grid">${options.map(o => `
+        <button class="option-card ${state[stateKey] === o ? "selected" : ""}" onclick="setSingle('${stateKey}', '${o}')">
+          <div class="option-title">${o}</div>
+        </button>`).join("")}</div>`;
+    }
+
+    function checkList(key) {
+      return `<div class="check-list">${checkGroups[key].map((item, index) => `
+        <label class="check-item">
+          <input type="checkbox" ${state.checks[key].includes(item) ? "checked" : ""} onchange="toggleCheckByIndex('${key}', ${index})" />
+          <span class="check-text">${item}</span>
+        </label>`).join("")}</div>`;
+    }
+
+    function toggleCheckByIndex(key, index) {
+      toggleCheck(key, checkGroups[key][index]);
+    }
+
+    function renderQuestion() {
+      const current = steps[state.step];
+
+      if (current.id === "product") {
+        questionTitle.textContent = "Это продуктовая сущность?";
+        questionHint.textContent = "Продукты, тарифы, сервисы, приложения и цифровые платформы относятся к отдельному треку продуктовой архитектуры.";
+        questionBody.innerHTML = `<div class="options-grid">
+          <button class="option-card ${state.product === "yes" ? "selected" : ""}" onclick="setSingle('product', 'yes')"><div class="option-title">Да, это продукт / сервис</div><div class="option-desc">Передать в отдельный трек продуктовой архитектуры.</div></button>
+          <button class="option-card ${state.product === "no" ? "selected" : ""}" onclick="setSingle('product', 'no')"><div class="option-title">Нет, это непродуктовая сущность</div><div class="option-desc">Продолжить проверку в дереве бренд-сущностей.</div></button>
+        </div>`;
+      }
+
+      if (current.id === "group") {
+        questionTitle.textContent = "К какой группе относится сущность?";
+        questionHint.textContent = "Мы укрупнили категории до 5 групп, чтобы дерево не превращалось в хаос.";
+        questionBody.innerHTML = optionCards(groups, "group", "group");
+      }
+
+      if (current.id === "subtype") {
+        questionTitle.textContent = "Уточните подтип";
+        questionHint.textContent = "Это поможет точнее определить уровень брендирования и ограничения.";
+        const list = state.group ? subtypes[state.group] : ["Сначала выберите группу"];
+        questionBody.innerHTML = optionCardsRaw(list, "subtype");
+      }
+
+      if (current.id === "role") {
+        questionTitle.textContent = "Есть ли самостоятельная роль?";
+        questionHint.textContent = "Если сущность существует только ради одного макета или события, ей не нужен отдельный бренд.";
+        questionBody.innerHTML = checkList("role");
+      }
+
+      if (current.id === "value") {
+        questionTitle.textContent = "Есть ли обещание и аудитория?";
+        questionHint.textContent = "Внешний контур не создаёт бренд. Важно наличие ценностного предложения и устойчивой аудитории.";
+        questionBody.innerHTML = checkList("value");
+      }
+
+      if (current.id === "lifecycle") {
+        questionTitle.textContent = "Какой жизненный цикл у сущности?";
+        questionHint.textContent = "Разовая активность почти никогда не получает логотип. Долгосрочность повышает возможный уровень.";
+        questionBody.innerHTML = optionCards(lifecycleOptions, "lifecycle", "lifecycle");
+      }
+
+      if (current.id === "touchpoints") {
+        questionTitle.textContent = "Где будет жить сущность?";
+        questionHint.textContent = "Один носитель — это не бренд. Система носителей может быть основанием для более высокого уровня.";
+        questionBody.innerHTML = checkList("touchpoints");
+      }
+
+      if (current.id === "resources") {
+        questionTitle.textContent = "Есть ли владелец и ресурсы?";
+        questionHint.textContent = "Если некому поддерживать сущность, ей нельзя давать высокий уровень брендирования.";
+        questionBody.innerHTML = checkList("resources");
+      }
+
+      if (current.id === "recognition") {
+        questionTitle.textContent = "Нужно ли копить узнаваемость?";
+        questionHint.textContent = "Разделяем навигационную, коммуникационную и брендовую дифференциацию.";
+        questionBody.innerHTML = optionCards(recognitionOptions, "recognition", "recognition");
+      }
+
+      if (current.id === "beelineRole") {
+        questionTitle.textContent = "Какую роль играет Билайн?";
+        questionHint.textContent = "Роль Билайна определяет модель связи: by beeline, совместно, при поддержке, powered by или при участии.";
+        questionBody.innerHTML = `<div class="options-grid">${beelineRoles.map(o => `
+          <button class="option-card ${state.beelineRole === o.id ? "selected" : ""}" onclick="setSingle('beelineRole', '${o.id}')">
+            <div class="option-title">${o.title}</div>
+            <div class="option-desc">${o.model}</div>
+          </button>`).join("")}</div>`;
+      }
+
+      if (current.id === "stoppers") {
+        questionTitle.textContent = "Есть ли стоп-факторы?";
+        questionHint.textContent = "Если есть критичные стоп-факторы, отдельный логотип не создаётся или уровень снижается.";
+        questionBody.innerHTML = checkList("stoppers");
+      }
+
+      if (current.id === "result") showResult();
+
+      backBtn.disabled = state.step === 0;
+      nextBtn.textContent = state.step === steps.length - 2 ? "Показать результат" : "Далее";
+    }
+
+    function showResult() {
+      const res = calculateResult();
+      quizLayout.classList.add("hidden");
+      resultSection.classList.remove("hidden");
+
+      const copyText = `Категория: ${res.category || "—"}\nПодтип: ${res.subtype || "—"}\nРекомендованный уровень: ${res.levelNum} — ${res.name}\nРешение по логотипу: ${res.logo}\nМодель связи с Билайном: ${res.model}\n\nЧто можно использовать:\n- ${res.can.join("\n- ")}\n\nЧто нельзя:\n- ${res.cannot.join("\n- ")}\n\nСледующие шаги:\n- ${res.next.join("\n- ")}`;
+
+      resultSection.innerHTML = `
+        <div class="panel">
+          <button class="btn secondary" onclick="restart()">Пройти заново</button>
+          <div class="result-grid">
+            <div class="result-card"><div class="result-kicker">итоговая рекомендация</div><h2 class="result-title">${res.levelNum} — ${res.name}</h2><p class="result-text">${res.desc}</p></div>
+            <div class="result-card black"><div class="result-kicker">решение по логотипу</div><h2 class="result-title">${res.logo}</h2><p class="result-text">Модель связи: <strong>${res.model}</strong></p></div>
+          </div>
+          <div class="two-cols">
+            <div class="list-card"><h3>Можно использовать</h3><ul>${res.can.map(i => `<li>${i}</li>`).join("")}</ul></div>
+            <div class="list-card"><h3>Нельзя</h3><ul>${res.cannot.map(i => `<li>${i}</li>`).join("")}</ul></div>
+          </div>
+          <div class="list-card" style="margin-top: 16px;"><h3>Следующие шаги</h3><ul>${res.next.map(i => `<li>${i}</li>`).join("")}</ul></div>
+          <h2 class="section-title" style="margin-top: 34px;">Краткое резюме для заявки</h2>
+          <div class="copy-box" id="copyText">${copyText}</div>
+          <button class="btn yellow" style="margin-top: 16px;" onclick="copyResult()">Скопировать рекомендацию</button>
+          <h2 class="section-title" style="margin-top: 40px;">Справка по уровням</h2>
+          <table class="table"><thead><tr><th>Уровень</th><th>Название</th><th>Для кого</th><th>Логотип</th></tr></thead><tbody>
+            <tr><td>0</td><td>Мастер-бренд</td><td>Функции, документы, разовые материалы</td><td>Нет</td></tr>
+            <tr><td>1</td><td>Брендированный модуль</td><td>Проекты, кампании, события, инициативы</td><td>Нет</td></tr>
+            <tr><td>2</td><td>Программа / платформа / зонтик</td><td>Долгосрочные внутренние системы</td><td>Возможен логоблок</td></tr>
+            <tr><td>3</td><td>Саббренд</td><td>Крупные долгосрочные платформы</td><td>Возможен после проверки</td></tr>
+            <tr><td>4</td><td>Endorsed / самостоятельная сущность</td><td>ДЗО, отдельные компании, фонды</td><td>Да / индивидуально</td></tr>
+          </tbody></table>
+        </div>`;
+    }
+
+    function copyResult() {
+      const text = document.getElementById("copyText").innerText;
+      navigator.clipboard.writeText(text);
+      alert("Рекомендация скопирована");
+    }
+
+    function restart() {
+      state.step = 0;
+      state.product = null;
+      state.group = null;
+      state.subtype = null;
+      state.lifecycle = null;
+      state.recognition = null;
+      state.beelineRole = null;
+      state.checks = { role: [], value: [], touchpoints: [], resources: [], stoppers: [] };
+      resultSection.classList.add("hidden");
+      quizLayout.classList.remove("hidden");
+      render();
+    }
+
+    function render() {
+      renderSteps();
+      renderQuestion();
+      updateAside();
+    }
+
+    backBtn.addEventListener("click", () => { if (state.step > 0) { state.step--; render(); } });
+    nextBtn.addEventListener("click", () => { if (state.step < steps.length - 1) { state.step++; render(); } });
+
+    function showApp() {
+      document.getElementById("authScreen").style.display = "none";
+      document.getElementById("appRoot").classList.remove("locked");
+      render();
+    }
+
+    function login() {
+      const input = document.getElementById("accessPassword");
+      const error = document.getElementById("authError");
+      const value = input.value.trim();
+      if (value === ACCESS_PASSWORD) {
+        localStorage.setItem(AUTH_KEY, "true");
+        error.classList.remove("visible");
+        showApp();
+      } else {
+        error.classList.add("visible");
+        input.value = "";
+        input.focus();
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem(AUTH_KEY);
+      location.reload();
+    }
+
+    function initAuth() {
+      const isAuthorized = localStorage.getItem(AUTH_KEY) === "true";
+      if (isAuthorized) {
+        showApp();
+      } else {
+        document.getElementById("authScreen").style.display = "grid";
+        document.getElementById("appRoot").classList.add("locked");
+        const input = document.getElementById("accessPassword");
+        const loginBtn = document.getElementById("loginBtn");
+        loginBtn.addEventListener("click", login);
+        input.addEventListener("keydown", (event) => { if (event.key === "Enter") login(); });
+        input.focus();
+      }
+    }
+
+    window.setSingle = setSingle;
+    window.toggleCheckByIndex = toggleCheckByIndex;
+    window.restart = restart;
+    window.copyResult = copyResult;
+    window.logout = logout;
+
+    initAuth();
+  </script>
+</body>
+</html>
